@@ -1,0 +1,9 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "querys/tags_query.sql"
+    schema: "migrations/tags/000002_create_tags_table.up.sql"
+    gen:
+      go:
+        package: "tags"
+        out: "tags"
