@@ -21,13 +21,13 @@ func (q *Queries) CreateTag(ctx context.Context, name string) error {
 	return err
 }
 
-const deleteUser = `-- name: DeleteUser :exec
+const deleteTag = `-- name: DeleteTag :exec
 
 DELETE FROM tags WHERE id = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, id)
+func (q *Queries) DeleteTag(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteTag, id)
 	return err
 }
 

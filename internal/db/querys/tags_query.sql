@@ -14,6 +14,6 @@ SELECT * FROM tags ORDER BY id LIMIT $1 OFFSET $2;
 
 UPDATE tags SET name = $1 WHERE id = $2;
 
--- name: DeleteUser :exec
+-- name: DeleteTag :exec
 
 DELETE FROM tags WHERE id = $1;
