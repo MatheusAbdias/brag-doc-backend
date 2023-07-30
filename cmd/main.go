@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/MatheusAbdias/brag-doc-backend/config"
+	controllers "github.com/MatheusAbdias/brag-doc-backend/controllers/tags"
 	dbConn "github.com/MatheusAbdias/brag-doc-backend/internal/db/tags"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
@@ -26,12 +27,12 @@ func init() {
 
 	conn, err := sql.Open(config.PostgresDriver, config.PostgresSource)
 	if err != nil {
-		log.Fatalf("could not connect to postgres database: %v", err)
+		log.Fatalf("could not connect to database: %v", err)
 	}
 
 	db = dbConn.New(conn)
 
-	fmt.Println("PostgreSQL connected successfully...")
+	fmt.Println("Database connected successfully...")
 
 	server = gin.Default()
 }
@@ -43,15 +44,17 @@ func main() {
 		log.Fatalf("could not load config: %v", err)
 	}
 
-	router := server.Group("/api")
+	tagController := controllers.TagController{Repo: db}
 
-	router.GET("/healthchecker", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"status": "success", "message": "Welcome to Golang with PostgreSQL"})
-	})
+	routerV1 := server.Group("/v1")
 
-	server.NoRoute(func(ctx *gin.Context) {
-		ctx.JSON(http.StatusNotFound, gin.H{"status": "fail", "message": fmt.Sprintf("Route %s not found", ctx.Request.URL)})
-	})
+	tagsRouter := routerV1.Group("tags")
 
-	log.Fatal(server.Run(":" + config.Port))
+	tagsRouter.POST("", tagController.CreateTag)
+	tagsRouter.GET(":id", tagController.GetTag)
+	tagsRouter.GET("", tagController.ListTags)
+	tagsRouter.PATCH(":id", tagController.UpdateTag)
+	tagsRouter.DELETE(":id", tagController.DeleteTag)
+
+	log.Fatalf("could not run server %v", server.Run(":"+config.Port))
 }
