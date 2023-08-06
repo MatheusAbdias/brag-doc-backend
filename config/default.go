@@ -3,8 +3,8 @@ package config
 import "github.com/spf13/viper"
 
 type Config struct {
-	PostgresDriver string `mapstructure:"DRIVER"`
-	PostgresSource string `mapstructure:"DATABASE_URL"`
+	Driver string `mapstructure:"DRIVER"`
+	Source string `mapstructure:"DATABASE_URL"`
 
 	Port string `mapstructure:"PORT"`
 }

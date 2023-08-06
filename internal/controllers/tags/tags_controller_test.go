@@ -37,7 +37,7 @@ func (repo *FakeTagRepo) DeleteTag(c context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func TestTagControllerCreateTag(t *testing.T) {
+func TestControllerCreateTag(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		Repo          TagRepo
@@ -74,7 +74,7 @@ func TestTagControllerCreateTag(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tagController := TagController{
+			Controller := Controller{
 				Repo: tc.Repo,
 			}
 
@@ -85,7 +85,7 @@ func TestTagControllerCreateTag(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
 
-			tagController.CreateTag(ctx)
+			Controller.CreateTag(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -100,7 +100,7 @@ func TestTagControllerCreateTag(t *testing.T) {
 	}
 }
 
-func TestTagControllerUdpate(t *testing.T) {
+func TestControllerUdpate(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		TagID         string
@@ -133,7 +133,7 @@ func TestTagControllerUdpate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tagController := TagController{
+			Controller := Controller{
 				Repo: tc.Repo,
 			}
 
@@ -145,7 +145,7 @@ func TestTagControllerUdpate(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
 			ctx.Params = []gin.Param{{Key: "id", Value: tc.TagID}}
-			tagController.UpdateTag(ctx)
+			Controller.UpdateTag(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -160,7 +160,7 @@ func TestTagControllerUdpate(t *testing.T) {
 	}
 
 }
-func TestTagControllerDelete(t *testing.T) {
+func TestControllerDelete(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		TagID         string
@@ -186,7 +186,7 @@ func TestTagControllerDelete(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tagController := TagController{
+			Controller := Controller{
 				Repo: tc.Repo,
 			}
 
@@ -197,7 +197,7 @@ func TestTagControllerDelete(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
 			ctx.Params = []gin.Param{{Key: "id", Value: tc.TagID}}
-			tagController.DeleteTag(ctx)
+			Controller.DeleteTag(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -213,7 +213,7 @@ func TestTagControllerDelete(t *testing.T) {
 
 }
 
-func TestTagControllerList(t *testing.T) {
+func TestControllerList(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		Repo          TagRepo
@@ -230,7 +230,7 @@ func TestTagControllerList(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tagController := TagController{
+			Controller := Controller{
 				Repo: tc.Repo,
 			}
 
@@ -239,7 +239,7 @@ func TestTagControllerList(t *testing.T) {
 
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
-			tagController.ListTags(ctx)
+			Controller.ListTags(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -255,7 +255,7 @@ func TestTagControllerList(t *testing.T) {
 
 }
 
-func TestTagControllerRetrive(t *testing.T) {
+func TestControllerRetrive(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		TagID         string
@@ -281,7 +281,7 @@ func TestTagControllerRetrive(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			tagController := TagController{
+			Controller := Controller{
 				Repo: tc.Repo,
 			}
 
@@ -292,7 +292,7 @@ func TestTagControllerRetrive(t *testing.T) {
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
 			ctx.Params = []gin.Param{{Key: "id", Value: tc.TagID}}
-			tagController.GetTag(ctx)
+			Controller.GetTag(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {

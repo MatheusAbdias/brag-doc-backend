@@ -18,11 +18,11 @@ type TagRepo interface {
 	DeleteTag(c context.Context, id uuid.UUID) error
 }
 
-type TagController struct {
+type Controller struct {
 	Repo TagRepo
 }
 
-func (ctrl *TagController) CreateTag(c *gin.Context) {
+func (ctrl *Controller) CreateTag(c *gin.Context) {
 	var tag dbCon.Tag
 	if err := c.ShouldBindJSON(&tag); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -44,7 +44,7 @@ func (ctrl *TagController) CreateTag(c *gin.Context) {
 	c.Status(http.StatusCreated)
 }
 
-func (ctrl *TagController) ListTags(c *gin.Context) {
+func (ctrl *Controller) ListTags(c *gin.Context) {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
@@ -75,7 +75,7 @@ func (ctrl *TagController) ListTags(c *gin.Context) {
 	})
 }
 
-func (ctrl *TagController) GetTag(c *gin.Context) {
+func (ctrl *Controller) GetTag(c *gin.Context) {
 	tagID := c.Param("id")
 
 	id, err := uuid.Parse(tagID)
@@ -94,17 +94,19 @@ func (ctrl *TagController) GetTag(c *gin.Context) {
 	c.JSON(http.StatusOK, tag)
 }
 
-func (ctrl *TagController) UpdateTag(c *gin.Context) {
+func (ctrl *Controller) UpdateTag(c *gin.Context) {
 	tagID := c.Param("id")
 	id, err := uuid.Parse(tagID)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"erro": "Tag not found"})
+		return
 	}
 
 	var tag dbCon.UpdateTagParams
 	if err := c.ShouldBindJSON(&tag); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"erro": "Invalid data"})
+		return
 	}
 
 	tag.ID = id
@@ -112,25 +114,26 @@ func (ctrl *TagController) UpdateTag(c *gin.Context) {
 	err = ctrl.Repo.UpdateTag(c, tag)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot update tag"})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"tag": tag})
 }
 
-func (ctrl *TagController) DeleteTag(c *gin.Context) {
+func (ctrl *Controller) DeleteTag(c *gin.Context) {
 	tagID := c.Param("id")
 
 	id, err := uuid.Parse(tagID)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"erro": "Tag not found"})
+		return
 	}
 
 	err = ctrl.Repo.DeleteTag(c, id)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Cannot delete tag"})
-
+		return
 	}
 
 	c.Status(http.StatusNoContent)
