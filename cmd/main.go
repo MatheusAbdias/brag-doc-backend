@@ -6,16 +6,23 @@ import (
 	"log"
 
 	"github.com/MatheusAbdias/brag-doc-backend/config"
-	controllers "github.com/MatheusAbdias/brag-doc-backend/controllers/tags"
-	dbConn "github.com/MatheusAbdias/brag-doc-backend/internal/db/tags"
+
+	eventControllers "github.com/MatheusAbdias/brag-doc-backend/internal/controllers/events"
+	tagControllers "github.com/MatheusAbdias/brag-doc-backend/internal/controllers/tags"
+	"github.com/MatheusAbdias/brag-doc-backend/internal/db/events"
+	"github.com/MatheusAbdias/brag-doc-backend/internal/db/tags"
+
+	"github.com/MatheusAbdias/brag-doc-backend/internal/routers"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 var (
-	server *gin.Engine
-	db     *dbConn.Queries
+	server  *gin.Engine
+	db      *sql.DB
+	tagsDB  *tags.Queries
+	eventDB *events.Queries
 )
 
 func init() {
@@ -25,12 +32,13 @@ func init() {
 		log.Fatalf("could not load config: %v", err)
 	}
 
-	conn, err := sql.Open(config.PostgresDriver, config.PostgresSource)
+	db, err := sql.Open(config.Driver, config.Source)
 	if err != nil {
 		log.Fatalf("could not connect to database: %v", err)
 	}
 
-	db = dbConn.New(conn)
+	tagsDB = tags.New(db)
+	eventDB = events.New(db)
 
 	fmt.Println("Database connected successfully...")
 
@@ -44,17 +52,12 @@ func main() {
 		log.Fatalf("could not load config: %v", err)
 	}
 
-	tagController := controllers.TagController{Repo: db}
+	tagsController := tagControllers.Controller{Repo: tagsDB}
+	eventController := eventControllers.Controller{Repo: eventDB}
 
-	routerV1 := server.Group("/v1")
+	viRouter := server.Group("/v1")
 
-	tagsRouter := routerV1.Group("tags")
-
-	tagsRouter.POST("", tagController.CreateTag)
-	tagsRouter.GET(":id", tagController.GetTag)
-	tagsRouter.GET("", tagController.ListTags)
-	tagsRouter.PATCH(":id", tagController.UpdateTag)
-	tagsRouter.DELETE(":id", tagController.DeleteTag)
-
+	routers.RegisterTagRouters(viRouter, tagsController)
+	routers.RegisterEventRouters(viRouter, eventController)
 	log.Fatalf("could not run server %v", server.Run(":"+config.Port))
 }

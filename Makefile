@@ -1,21 +1,18 @@
 include .env
 export
 
-CREATE_MIGRATION_SCRIPT := $(shell pwd)/scripts/create_migrations.sh
-RUN_MIGRATIONS_SCRIPT := $(shell pwd)/scripts/run_migrations.sh
+BASE_DIR := $(shell pwd)
+CREATE_MIGRATION_SCRIPT := $(BASE_DIR)/scripts/create_migrations.sh
+RUN_MIGRATIONS_SCRIPT := $(BASE_DIR)/scripts/run_migrations.sh
 
 create_migration:
-ifndef DIR
-	@echo "Error: DIR parameter not provided."
-	@exit 1
-endif
 ifndef NAME
 	@echo "Error: NAME parameter not provided."
 	@exit 1
 endif
 
 	@echo "Creating migration script..."
-	@bash $(CREATE_MIGRATION_SCRIPT) -d "internal/db/migrations/$(DIR)" -n $(NAME)
+	@bash $(CREATE_MIGRATION_SCRIPT) -d "internal/db/migrations/" -n $(NAME)
 
 
 migrate:
@@ -29,4 +26,4 @@ endif
 
 generate_sql:
 	@echo "Generating SQL..."
-	@docker run --rm -v $(pwd):/src -w /src kjconroy/sqlc generate
+	@docker run --rm -v $(BASE_DIR)/internal/db:/src -w /src kjconroy/sqlc generate
