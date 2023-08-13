@@ -30,13 +30,18 @@ func (ctrl *Controller) CreateEvent(c *gin.Context) {
 		return
 	}
 
+	validators := EventValidators()
+	for _, validator := range validators {
+		validator(c, event)
+	}
+
 	err := ctrl.Repo.CreateEvent(c, event)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	c.JSON(http.StatusCreated, gin.H{})
 }
 
 func (ctrl *Controller) GetEvent(c *gin.Context) {

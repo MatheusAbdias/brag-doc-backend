@@ -41,7 +41,7 @@ func (ctrl *Controller) CreateTag(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusCreated)
+	c.JSON(http.StatusCreated, gin.H{})
 }
 
 func (ctrl *Controller) ListTags(c *gin.Context) {

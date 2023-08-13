@@ -1,99 +1,83 @@
-package controllers
+package tests
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
-	dbCon "github.com/MatheusAbdias/brag-doc-backend/internal/db/tags"
-	"github.com/gin-gonic/gin"
+	controllers "github.com/MatheusAbdias/brag-doc-backend/internal/controllers/events"
 	"github.com/google/uuid"
+
+	"github.com/gin-gonic/gin"
 )
 
-type FakeTagRepo struct {
-	tags []dbCon.Tag
-}
-
-func (repo *FakeTagRepo) CreateTag(c context.Context, name string) error {
-	return nil
-}
-
-func (repo *FakeTagRepo) GetTags(c context.Context, arg dbCon.GetTagsParams) ([]dbCon.Tag, error) {
-	return repo.tags, nil
-}
-
-func (repo *FakeTagRepo) GetTag(c context.Context, id uuid.UUID) (dbCon.Tag, error) {
-	return dbCon.Tag{}, nil
-}
-
-func (repo *FakeTagRepo) UpdateTag(c context.Context, arg dbCon.UpdateTagParams) error {
-	return nil
-}
-
-func (repo *FakeTagRepo) DeleteTag(c context.Context, id uuid.UUID) error {
-	return nil
-}
-
-func TestControllerCreateTag(t *testing.T) {
+func TestControllerCreateEvent(t *testing.T) {
 	testCases := []struct {
 		Name          string
-		Repo          TagRepo
+		Repo          controllers.EventsRepo
 		RequestBody   interface{}
-		ExpectedError bool
 		ExpectedCode  int
+		ExpectedError bool
 	}{
 		{
-			Name: "Valid Tag Creation",
-			Repo: &FakeTagRepo{},
-			RequestBody: map[string]string{
-				"name": "Test",
+			Name: "Valid Event",
+			Repo: &FakeEventRepo{},
+			RequestBody: map[string]interface{}{
+				"name":        "New event",
+				"description": "New valid event",
+				"date":        time.Now().Format(time.RFC3339),
 			},
-			ExpectedError: false,
 			ExpectedCode:  http.StatusCreated,
+			ExpectedError: false,
 		},
 		{
-			Name: "Invalid Tag missing name",
-			Repo: &FakeTagRepo{},
-			RequestBody: map[string]string{
-				"name": "",
+			Name: "Invalid Event missing",
+			Repo: &FakeEventRepo{},
+			RequestBody: map[string]interface{}{
+				"description": "New valid event",
+				"date":        time.Now().Format(time.RFC3339),
 			},
-			ExpectedError: true,
 			ExpectedCode:  http.StatusBadRequest,
+			ExpectedError: true,
 		},
 		{
-			Name:          "Invalid Tag Payload missing name",
-			Repo:          &FakeTagRepo{},
-			RequestBody:   map[string]string{},
-			ExpectedError: true,
+			Name: "Invalid event missing description",
+			Repo: &FakeEventRepo{},
+			RequestBody: map[string]interface{}{
+				"name": "New event",
+				"date": time.Now().Format(time.RFC3339),
+			},
 			ExpectedCode:  http.StatusBadRequest,
+			ExpectedError: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			Controller := Controller{
+			Controller := controllers.Controller{
 				Repo: tc.Repo,
 			}
 
 			requestBody, _ := json.Marshal(tc.RequestBody)
-			req, _ := http.NewRequest("POST", "/tags", bytes.NewBuffer(requestBody))
+			req, _ := http.NewRequest("POST", "/events", bytes.NewBuffer(requestBody))
 			recorder := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
 
-			Controller.CreateTag(ctx)
+			Controller.CreateEvent(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
-					t.Errorf("Expected status code %d, got %d", tc.ExpectedCode, recorder.Code)
+					t.Errorf("Expected status code %d got %d.", tc.ExpectedCode, recorder.Code)
+
 				}
 			} else {
 				if recorder.Code != tc.ExpectedCode {
-					t.Errorf("Expected status code %d, got %d", tc.ExpectedCode, recorder.Code)
+					t.Errorf("Expected status code %d got %d.", tc.ExpectedCode, recorder.Code)
 				}
 			}
 		})
@@ -103,16 +87,16 @@ func TestControllerCreateTag(t *testing.T) {
 func TestControllerUdpate(t *testing.T) {
 	testCases := []struct {
 		Name          string
-		TagID         string
-		Repo          TagRepo
+		EventID       string
+		Repo          controllers.EventsRepo
 		RequestBody   interface{}
 		ExpectedError bool
 		ExpectedCode  int
 	}{
 		{
-			Name:  "Update Tag",
-			TagID: uuid.NewString(),
-			Repo:  &FakeTagRepo{},
+			Name:    "Update Event",
+			EventID: uuid.NewString(),
+			Repo:    &FakeEventRepo{},
 			RequestBody: map[string]string{
 				"name": "Test",
 			},
@@ -120,9 +104,9 @@ func TestControllerUdpate(t *testing.T) {
 			ExpectedCode:  http.StatusOK,
 		},
 		{
-			Name:  "Invalid Tag id",
-			TagID: "1",
-			Repo:  &FakeTagRepo{},
+			Name:    "Invalid Event id",
+			EventID: "1",
+			Repo:    &FakeEventRepo{},
 			RequestBody: map[string]string{
 				"name": "Test",
 			},
@@ -133,19 +117,19 @@ func TestControllerUdpate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			Controller := Controller{
+			Controller := controllers.Controller{
 				Repo: tc.Repo,
 			}
 
 			requestBody, _ := json.Marshal(tc.RequestBody)
-			url := "/tags/" + tc.TagID
+			url := "/events/" + tc.EventID
 			req, _ := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
 			recorder := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
-			ctx.Params = []gin.Param{{Key: "id", Value: tc.TagID}}
-			Controller.UpdateTag(ctx)
+			ctx.Params = []gin.Param{{Key: "id", Value: tc.EventID}}
+			Controller.UpdateEvent(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -163,22 +147,22 @@ func TestControllerUdpate(t *testing.T) {
 func TestControllerDelete(t *testing.T) {
 	testCases := []struct {
 		Name          string
-		TagID         string
-		Repo          TagRepo
+		EventID       string
+		Repo          controllers.EventsRepo
 		ExpectedError bool
 		ExpectedCode  int
 	}{
 		{
-			Name:          "Delete Tag",
-			TagID:         uuid.NewString(),
-			Repo:          &FakeTagRepo{},
+			Name:          "Delete Event",
+			EventID:       uuid.NewString(),
+			Repo:          &FakeEventRepo{},
 			ExpectedError: false,
 			ExpectedCode:  http.StatusOK,
 		},
 		{
-			Name:          "Invalid Tag id",
-			TagID:         "1",
-			Repo:          &FakeTagRepo{},
+			Name:          "Invalid Event id",
+			EventID:       "1",
+			Repo:          &FakeEventRepo{},
 			ExpectedError: false,
 			ExpectedCode:  http.StatusNotFound,
 		},
@@ -186,18 +170,18 @@ func TestControllerDelete(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			Controller := Controller{
+			Controller := controllers.Controller{
 				Repo: tc.Repo,
 			}
 
-			url := "/tags/" + tc.TagID
+			url := "/events/" + tc.EventID
 			req, _ := http.NewRequest("DELETE", url, nil)
 			recorder := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
-			ctx.Params = []gin.Param{{Key: "id", Value: tc.TagID}}
-			Controller.DeleteTag(ctx)
+			ctx.Params = []gin.Param{{Key: "id", Value: tc.EventID}}
+			Controller.DeleteEvent(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -216,13 +200,13 @@ func TestControllerDelete(t *testing.T) {
 func TestControllerList(t *testing.T) {
 	testCases := []struct {
 		Name          string
-		Repo          TagRepo
+		Repo          controllers.EventsRepo
 		ExpectedError bool
 		ExpectedCode  int
 	}{
 		{
-			Name:          "List Tags",
-			Repo:          &FakeTagRepo{},
+			Name:          "List Events",
+			Repo:          &FakeEventRepo{},
 			ExpectedError: false,
 			ExpectedCode:  http.StatusOK,
 		},
@@ -230,16 +214,16 @@ func TestControllerList(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			Controller := Controller{
+			Controller := controllers.Controller{
 				Repo: tc.Repo,
 			}
 
-			req, _ := http.NewRequest("GET", "/tags", nil)
+			req, _ := http.NewRequest("GET", "/events", nil)
 			recorder := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
-			Controller.ListTags(ctx)
+			Controller.ListEvents(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
@@ -258,22 +242,22 @@ func TestControllerList(t *testing.T) {
 func TestControllerRetrive(t *testing.T) {
 	testCases := []struct {
 		Name          string
-		TagID         string
-		Repo          TagRepo
+		EventID       string
+		Repo          controllers.EventsRepo
 		ExpectedError bool
 		ExpectedCode  int
 	}{
 		{
-			Name:          "Get Tags",
-			TagID:         uuid.NewString(),
-			Repo:          &FakeTagRepo{},
+			Name:          "Get Events",
+			EventID:       uuid.NewString(),
+			Repo:          &FakeEventRepo{},
 			ExpectedError: false,
 			ExpectedCode:  http.StatusOK,
 		},
 		{
-			Name:          "Invalid Tag id",
-			TagID:         "1",
-			Repo:          &FakeTagRepo{},
+			Name:          "Invalid Event id",
+			EventID:       "1",
+			Repo:          &FakeEventRepo{},
 			ExpectedError: false,
 			ExpectedCode:  http.StatusNotFound,
 		},
@@ -281,18 +265,18 @@ func TestControllerRetrive(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			Controller := Controller{
+			Controller := controllers.Controller{
 				Repo: tc.Repo,
 			}
 
-			url := "/tags/" + tc.TagID
+			url := "/events/" + tc.EventID
 			req, _ := http.NewRequest("GET", url, nil)
 			recorder := httptest.NewRecorder()
 
 			ctx, _ := gin.CreateTestContext(recorder)
 			ctx.Request = req
-			ctx.Params = []gin.Param{{Key: "id", Value: tc.TagID}}
-			Controller.GetTag(ctx)
+			ctx.Params = []gin.Param{{Key: "id", Value: tc.EventID}}
+			Controller.GetEvent(ctx)
 
 			if tc.ExpectedError {
 				if recorder.Code != tc.ExpectedCode {
