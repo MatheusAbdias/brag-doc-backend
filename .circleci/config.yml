@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  build:
+  run_tests:
     working_directory: ~/repo
     docker:
       - image: golang:1.20
@@ -12,7 +12,14 @@ jobs:
             - go-mod-v4-{{ checksum "go.sum" }}
       - run:
           name: Install dependencies
-          command: go get -v -t -d ./...
+          command: |
+            go get -v -t -d ./...
+      - run:
+          name: Set up environment
+          command: |
+            echo "DRIVER=your_driver" > .env
+            echo "DATABASE_URL=your_database_url" >> .env
+            echo "PORT=your_port" >> .env
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
@@ -20,3 +27,8 @@ jobs:
       - run:
           name: Run tests
           command: go test -v ./...
+
+workflows:
+  build_test:
+    jobs:
+      - run_tests
