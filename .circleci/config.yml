@@ -14,9 +14,12 @@ jobs:
           name: Install dependencies
           command: |
             go get -v -t -d ./...
-            echo 'DRIVER="your_driver"' >> $BASH_ENV
-            echo 'DATABASE_URL="your_database_url"' >> $BASH_ENV
-            echo 'PORT="your_port"' >> $BASH_ENV
+      - run:
+          name: Set up environment
+          command: |
+            echo "DRIVER=your_driver" > .env
+            echo "DATABASE_URL=your_database_url" >> .env
+            echo "PORT=your_port" >> .env
       - save_cache:
           key: go-mod-v4-{{ checksum "go.sum" }}
           paths:
