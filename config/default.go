@@ -5,8 +5,7 @@ import "github.com/spf13/viper"
 type Config struct {
 	Driver string `mapstructure:"DRIVER"`
 	Source string `mapstructure:"DATABASE_URL"`
-
-	Port string `mapstructure:"PORT"`
+	Port   string `mapstructure:"PORT"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
